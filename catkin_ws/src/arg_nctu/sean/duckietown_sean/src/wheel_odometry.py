@@ -15,7 +15,7 @@ class Odometry(object):
 	def __init__(self):
 		self.node_name = rospy.get_name()
 		self.br = tf.TransformBroadcaster()
-		self.CPR = 70 # encoder pusle per round 2*75
+		self.CPR = 75 # encoder pusle per round = 75
 		self.radius = 0.0215 # radius of wheel in meter
 		self.width = 0.22 # width of robot in meter
 		self.x = 0 # robot position x in meter
@@ -37,7 +37,8 @@ class Odometry(object):
 		# interrupt callback functions
 		GPIO.add_event_detect(23, GPIO.RISING, callback = self.Encoder_L)
 		GPIO.add_event_detect(27, GPIO.RISING, callback = self.Encoder_R)
-
+		# publisher
+		self.pubPosition=rospy.Publisher("/position",Float64MultiArray,queue_size =10)
 		# subscriber
 		self.sub_RP = rospy.Subscriber("~orientationRP", Float64MultiArray, self.cbOrientation)
 		rospy.on_shutdown(self.custom_shutdown) # shutdown method
@@ -80,6 +81,9 @@ class Odometry(object):
                                 "base_link", # robot frame
                                 "map") # base frame
 		print "x=", self.x," y=", self.y, " theta=" ,self.theta  # uncomment to print the position and pose of the robot
+		msg = Float64MultiArray()
+		msg.data = self.x, self.y, self.theta
+		self.pubPosition.publish(msg)
 	# Mark the track the robot pass through, still has problem not solved
 	'''def pubPointMarker(self,marker_id , rgba = [0.6, 0.6, 0, 1], pose = [0,0,0,0,0,0,1], frame_id = '/map'):
 		marker = Marker()
